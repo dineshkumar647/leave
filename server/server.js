@@ -1,3 +1,4 @@
+
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
@@ -8,13 +9,23 @@ dotenv.config();
 
 const app = express();
 
-// CORS FIX
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://dineshkumar647.github.io"
+];
+
+// CORS configuration
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
-  ],
-  credentials: true
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.use(express.json());
@@ -110,13 +121,13 @@ app.delete("/api/leaves/:id", async (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Connect MongoDB
+// Connect MongoDB and start server
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("MongoDB connected successfully!");
 
-    app.listen(PORT, () => {
-      console.log(`LeaveEase API running at http://localhost:${PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`LeaveEase API running on port ${PORT}`);
     });
   })
   .catch((error) => {
